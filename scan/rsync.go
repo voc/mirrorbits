@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -78,10 +79,14 @@ func (r *RsyncScanner) Scan(url, identifier string, conn redis.Conn, stop chan b
 
 	count := 0
 
+	// The rsync client use the local timezone
+	location, _ := time.LoadLocation("Local")
+
 	line, err := readln(reader)
 	for err == nil {
 		var size int64
 		var f filedata
+		var modTime string
 
 		if utils.IsStopped(stop) {
 			return ScanAborted
@@ -105,6 +110,14 @@ func (r *RsyncScanner) Scan(url, identifier string, conn redis.Conn, stop chan b
 		size, err = strconv.ParseInt(ret[1], 10, 64)
 		if err != nil {
 			log.Errorf("[%s] ScanRsync: Invalid size: %s", identifier, ret[1])
+			goto cont
+		}
+
+		// Parse date
+		modTime = ret[2] + " " + ret[3]
+		f.modTime, err = time.ParseInLocation("2006/01/02 15:04:05", modTime, location)
+		if err != nil {
+			log.Error("[%s] ScanRsync: Invalid modtime: %s", identifier, modTime)
 			goto cont
 		}
 

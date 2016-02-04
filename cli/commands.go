@@ -246,6 +246,7 @@ func (c *cli) CmdAdd(args ...string) error {
 	countryOnly := cmd.Bool("country-only", false, "The mirror should only handle its country")
 	asOnly := cmd.Bool("as-only", false, "The mirror should only handle clients in the same AS number")
 	score := cmd.Int("score", 0, "Weight to give to the mirror during selection")
+	ignoreModTime := cmd.Bool("ignore-modtime", false, "Ignore files last modification time for this mirror")
 	comment := cmd.String("comment", "", "Comment")
 
 	if err := cmd.Parse(args); err != nil {
@@ -350,6 +351,7 @@ func (c *cli) CmdAdd(args ...string) error {
 		"continentCode", continentCode,
 		"countryCodes", countryCode,
 		"asnum", geoRec.ASNum,
+		"ignoreModTime", *ignoreModTime,
 		"comment", strings.TrimSpace(*comment),
 		"enabled", false,
 		"up", false)
@@ -784,6 +786,7 @@ reopen:
 		"continentCode", mirror.ContinentCode,
 		"countryCodes", mirror.CountryCodes,
 		"asnum", mirror.Asnum,
+		"ignoreModTime", mirror.IgnoreModTime,
 		"comment", mirror.Comment,
 		"enabled", mirror.Enabled)
 

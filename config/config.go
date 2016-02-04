@@ -37,9 +37,10 @@ var (
 			SHA256: false,
 			MD5:    false,
 		},
-		DisallowRedirects:       false,
-		WeightDistributionRange: 1.5,
-		DisableOnMissingFile:    false,
+		DisallowRedirects:          false,
+		WeightDistributionRange:    1.5,
+		DisableOnMissingFile:       false,
+		IgnoreFileModificationTime: false,
 	}
 	config      *configuration
 	configMutex sync.RWMutex
@@ -49,25 +50,26 @@ var (
 )
 
 type configuration struct {
-	Repository              string     `yaml:"Repository"`
-	Templates               string     `yaml:"Templates"`
-	OutputMode              string     `yaml:"OutputMode"`
-	ListenAddress           string     `yaml:"ListenAddress"`
-	Gzip                    bool       `yaml:"Gzip"`
-	RedisAddress            string     `yaml:"RedisAddress"`
-	RedisPassword           string     `yaml:"RedisPassword"`
-	RedisDB                 int        `yaml:"RedisDB"`
-	LogDir                  string     `yaml:"LogDir"`
-	GeoipDatabasePath       string     `yaml:"GeoipDatabasePath"`
-	ConcurrentSync          int        `yaml:"ConcurrentSync"`
-	ScanInterval            int        `yaml:"ScanInterval"`
-	CheckInterval           int        `yaml:"CheckInterval"`
-	RepositoryScanInterval  int        `yaml:"RepositoryScanInterval"`
-	Hashes                  hashing    `yaml:"Hashes"`
-	DisallowRedirects       bool       `yaml:"DisallowRedirects"`
-	WeightDistributionRange float32    `yaml:"WeightDistributionRange"`
-	DisableOnMissingFile    bool       `yaml:"DisableOnMissingFile"`
-	Fallbacks               []fallback `yaml:"Fallbacks"`
+	Repository                 string     `yaml:"Repository"`
+	Templates                  string     `yaml:"Templates"`
+	OutputMode                 string     `yaml:"OutputMode"`
+	ListenAddress              string     `yaml:"ListenAddress"`
+	Gzip                       bool       `yaml:"Gzip"`
+	RedisAddress               string     `yaml:"RedisAddress"`
+	RedisPassword              string     `yaml:"RedisPassword"`
+	RedisDB                    int        `yaml:"RedisDB"`
+	LogDir                     string     `yaml:"LogDir"`
+	GeoipDatabasePath          string     `yaml:"GeoipDatabasePath"`
+	ConcurrentSync             int        `yaml:"ConcurrentSync"`
+	ScanInterval               int        `yaml:"ScanInterval"`
+	CheckInterval              int        `yaml:"CheckInterval"`
+	RepositoryScanInterval     int        `yaml:"RepositoryScanInterval"`
+	Hashes                     hashing    `yaml:"Hashes"`
+	DisallowRedirects          bool       `yaml:"DisallowRedirects"`
+	WeightDistributionRange    float32    `yaml:"WeightDistributionRange"`
+	DisableOnMissingFile       bool       `yaml:"DisableOnMissingFile"`
+	IgnoreFileModificationTime bool       `yaml:"IgnoreFileModificationTime"`
+	Fallbacks                  []fallback `yaml:"Fallbacks"`
 
 	RedisSentinelMasterName string      `yaml:"RedisSentinelMasterName"`
 	RedisSentinels          []sentinels `yaml:"RedisSentinels"`

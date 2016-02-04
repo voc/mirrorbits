@@ -5,9 +5,9 @@ package scan
 
 import (
 	"fmt"
+	"github.com/etix/goftp"
 	"github.com/etix/mirrorbits/utils"
 	"github.com/garyburd/redigo/redis"
-	"github.com/jlaffaye/ftp"
 	"net/url"
 	"os"
 	"strings"
@@ -60,6 +60,10 @@ func (f *FTPScanner) Scan(scanurl, identifier string, conn redis.Conn, stop chan
 
 	log.Infof("[%s] Requesting file list via ftp...", identifier)
 
+	if _, ok := c.Feature("MLST"); !ok {
+		log.Warning("This server does not support the RFC 3659, consider using rsync instead of FTP!")
+	}
+
 	var files []*filedata = make([]*filedata, 0, 1000)
 
 	err = c.ChangeDir(ftpurl.Path)
@@ -75,20 +79,14 @@ func (f *FTPScanner) Scan(scanurl, identifier string, conn redis.Conn, stop chan
 		_ = prefixDir
 		//fmt.Printf("[%s] Current dir: %s\n", identifier, prefixDir)
 	}
-	prefix := ftpurl.Path
 
-	// Remove the trailing slash
-	prefix = strings.TrimRight(prefix, "/")
-
-	files, err = f.walkFtp(c, files, prefix+"/", stop)
+	files, err = f.walkFtp(c, files, "", stop)
 	if err != nil {
 		return fmt.Errorf("ftp error %s", err.Error())
 	}
 
 	count := 0
 	for _, fd := range files {
-		fd.path = strings.TrimPrefix(fd.path, prefix)
-
 		if os.Getenv("DEBUG") != "" {
 			fmt.Printf("%s\n", fd.path)
 		}
@@ -114,11 +112,17 @@ func (f *FTPScanner) walkFtp(c *ftp.ServerConn, files []*filedata, path string, 
 	for _, e := range flist {
 		if e.Type == ftp.EntryTypeFile {
 			newf := &filedata{}
-			newf.path = path + e.Name
+			newf.path = "/" + path + "/" + e.Name
 			newf.size = int64(e.Size)
+			newf.modTime = e.Time
 			files = append(files, newf)
 		} else if e.Type == ftp.EntryTypeFolder {
-			files, err = f.walkFtp(c, files, path+e.Name+"/", stop)
+			newpath := path
+			if len(newpath) > 0 {
+				newpath += "/"
+			}
+			newpath += e.Name
+			files, err = f.walkFtp(c, files, newpath, stop)
 			if err != nil {
 				return files, err
 			}

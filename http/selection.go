@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
+	"time"
 )
 
 type MirrorSelection interface {
@@ -60,10 +61,15 @@ func (h DefaultEngine) Selection(ctx *Context, cache *mirrors.Cache, fileInfo *f
 			}
 			goto delete
 		}
-		// Is it the same size as source?
+		// Is it the same file as source?
 		if m.FileInfo != nil {
 			if m.FileInfo.Size != fileInfo.Size {
 				m.ExcludeReason = "File size mismatch"
+				goto delete
+			}
+			if !GetConfig().IgnoreFileModificationTime && !m.IgnoreModTime && !m.FileInfo.ModTime.IsZero() &&
+				!m.FileInfo.ModTime.Truncate(time.Second).Equal(fileInfo.ModTime.Truncate(time.Second)) {
+				m.ExcludeReason = "File last modification time mismatch"
 				goto delete
 			}
 		}
