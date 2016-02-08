@@ -69,7 +69,7 @@ func (h DefaultEngine) Selection(ctx *Context, cache *mirrors.Cache, fileInfo *f
 			}
 			if !GetConfig().IgnoreFileModificationTime && !m.IgnoreModTime && !m.FileInfo.ModTime.IsZero() &&
 				!m.FileInfo.ModTime.Truncate(time.Second).Equal(fileInfo.ModTime.Truncate(time.Second)) {
-				m.ExcludeReason = "File last modification time mismatch"
+				m.ExcludeReason = "Timestamp mismatch"
 				goto delete
 			}
 		}
