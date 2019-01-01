@@ -192,11 +192,8 @@ func (h DefaultEngine) Selection(ctx *Context, cache *mirrors.Cache, fileInfo *f
 		// The minimum allowed score is 1
 		m.ComputedScore = int(math.Max(floatingScore, 1))
 
-		if m.ComputedScore > baseScore {
-			// The weight must always be > 0 to not break the randomization below
-			totalScore += m.ComputedScore - baseScore
-			weights[m.ID] = m.ComputedScore - baseScore
-		}
+		totalScore += m.ComputedScore
+		weights[m.ID] = m.ComputedScore
 	}
 
 	// Get the final number of mirrors selected for weight distribution
