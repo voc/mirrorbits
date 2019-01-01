@@ -43,6 +43,7 @@ func (h DefaultEngine) Selection(ctx *Context, cache *mirrors.Cache, fileInfo *f
 
 	// Filter
 	safeIndex := 0
+	totalMirrorScore := 0
 	excluded = make([]mirrors.Mirror, 0, len(mlist))
 	var closestMirror float32
 	var farthestMirror float32
@@ -117,6 +118,9 @@ func (h DefaultEngine) Selection(ctx *Context, cache *mirrors.Cache, fileInfo *f
 			m.ExcludeReason = "User's country restriction"
 			goto discard
 		}
+
+		totalMirrorScore = totalMirrorScore + m.Score
+
 		if safeIndex == 0 {
 			closestMirror = m.Distance
 		} else if closestMirror > m.Distance {
@@ -158,39 +162,19 @@ func (h DefaultEngine) Selection(ctx *Context, cache *mirrors.Cache, fileInfo *f
 
 	/* Weight distribution for random selection [Probabilistic weight] */
 
-	// Compute score for each mirror and return the mirrors eligible for weight distribution.
-	// This includes:
-	// - mirrors found in a 1.5x (configurable) range from the closest mirror
-	// - mirrors targeting the given country (as primary or secondary)
-	// - mirrors being in the same AS number
 	totalScore := 0
-	baseScore := int(farthestMirror)
 	weights := map[int]int{}
 	for i := 0; i < len(mlist); i++ {
 		m := &mlist[i]
 
-		m.ComputedScore = baseScore - int(m.Distance) + 1
-
-		if m.Distance <= closestMirror*GetConfig().WeightDistributionRange {
-			score := (float32(baseScore) - m.Distance)
-			if !utils.IsPrimaryCountry(clientInfo, m.CountryFields) {
-				score /= 2
-			}
-			m.ComputedScore += int(score)
-		} else if utils.IsPrimaryCountry(clientInfo, m.CountryFields) {
-			m.ComputedScore += int(float32(baseScore) - (m.Distance * 5))
-		} else if utils.IsAdditionalCountry(clientInfo, m.CountryFields) {
-			m.ComputedScore += int(float32(baseScore) - closestMirror)
-		}
+		floatingScore := float64(m.Score)
 
 		if m.Asnum == clientInfo.ASNum {
-			m.ComputedScore += baseScore / 2
+			floatingScore = float64(totalMirrorScore)
 		}
 
-		floatingScore := float64(m.ComputedScore) + (float64(m.ComputedScore) * (float64(m.Score) / 100)) + 0.5
-
 		// The minimum allowed score is 1
-		m.ComputedScore = int(math.Max(floatingScore, 1))
+		m.ComputedScore = int(floatingScore)
 
 		totalScore += m.ComputedScore
 		weights[m.ID] = m.ComputedScore
